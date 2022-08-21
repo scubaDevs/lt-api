@@ -1,0 +1,311 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// users Table and tables that have relashionship with it
+model User {
+  id_user             String               @id @default(uuid())
+  name                String
+  surname             String
+  email               String               @unique
+  password            String
+  age                 String
+  avatar              String?
+  whatsapp            String
+  eng_level           String
+  customer            Boolean?             @default(false)
+  native_lang         String
+  country             String
+  city                String
+  role                Role?                @default(USER)
+  created_at          DateTime             @default(now())
+  updated_at          DateTime             @updatedAt
+  Feedbacks_Receiver  Feedback[]           @relation("receiver")
+  Feedbacks_Author    Feedback[]           @relation("author")
+  MeetingAppointments MeetingAppointment[]
+  UserThathaveAFriend Connection[]         @relation("UserThatHaveAFriend")
+  FriendsUser         Connection[]         @relation("UserFriend")
+  FakeUser            FakeUser? // 1x1 com fake_users
+  Payment             Payment[]
+  UserOnChallenge     UserOnChallenge[]
+  AbandonedClass      AbandonedClass[]
+  ConcludedClass      ConcludedClass[]
+  Favorite            Favorite[]
+  Like                Like[]
+
+  @@map("users")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+//starting tables with relashionship with users table and others
+
+model Payment {
+  id_payments String   @id @default(uuid())
+  User        User     @relation(fields: [id_user], references: [id_user])
+  id_user     String
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  @@map("payments")
+}
+
+model Feedback {
+  id_feedback  String   @id @default(uuid())
+  User_creator User     @relation("receiver", fields: [id_receiver], references: [id_user])
+  id_receiver  String
+  User_Author  User     @relation("author", fields: [id_author], references: [id_user])
+  id_author    String
+  feedback     String
+  reply        String?
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  @@map("feedbacks")
+}
+
+model MeetingAppointment {
+  id_meeting    String   @id @default(uuid())
+  UserMeeting   User     @relation(fields: [id_user], references: [id_user])
+  id_user       String
+  start_meeting DateTime @db.Timetz()
+  end_meeting   DateTime @db.Timetz()
+  week_day      String
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  @@map("meeting_appointments")
+}
+
+model Connection {
+  id_connections String   @id @default(uuid())
+  ReferencedUser User     @relation("UserThatHaveAFriend", fields: [id_user], references: [id_user])
+  id_user        String
+  User           User     @relation("UserFriend", fields: [Id_friend], references: [id_user])
+  Id_friend      String
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  @@map("connections")
+}
+
+model UserOnChallenge {
+  id_user_challenge String    @id @default(uuid())
+  User              User      @relation(fields: [id_user], references: [id_user])
+  Challenge         Challenge @relation(fields: [id_challenge], references: [id_challenge])
+  id_challenge      String
+  id_user           String
+
+  created_at                DateTime                    @default(now())
+  updated_at                DateTime                    @updatedAt
+  ClassesOnUsersOnChallenge ClassesOnUsersOnChallenge[]
+
+  @@map("users_challenges")
+}
+
+model Class {
+  id_class                  String                      @id @default(uuid())
+  Challenge                 Challenge                   @relation(fields: [id_challenge], references: [id_challenge])
+  id_challenge              String
+  users_number              Int
+  created_at                DateTime                    @default(now())
+  updated_at                DateTime                    @updatedAt
+  ClassesOnUsersOnChallenge ClassesOnUsersOnChallenge[]
+  AbandonedClass            AbandonedClass[]
+  ConcludedClass            ConcludedClass[]
+
+  @@map("classes")
+}
+
+model ClassesOnUsersOnChallenge {
+  id_class_users_on_challenges String          @id @default(uuid())
+  Class                        Class           @relation(fields: [id_class], references: [id_class])
+  id_class                     String
+  UserChallenge                UserOnChallenge @relation(fields: [id_user_challenge], references: [id_user_challenge])
+  id_user_challenge            String
+  created_at                   DateTime        @default(now())
+  updated_at                   DateTime        @updatedAt
+
+  @@map("classes_on_users_on_challenges")
+}
+
+model AbandonedClass {
+  id_abandoned String   @id @default(uuid())
+  User         User     @relation(fields: [id_user], references: [id_user])
+  id_user      String
+  Classes      Class    @relation(fields: [id_class], references: [id_class])
+  id_class     String
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  @@map("abandoned_classes")
+}
+
+model ConcludedClass {
+  id_concluded_class String   @id @default(uuid())
+  User               User     @relation(fields: [id_user], references: [id_user])
+  id_user            String
+  Classes            Class    @relation(fields: [id_class], references: [id_class])
+  id_class           String
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  @@map("concluded_classes")
+}
+
+model Favorite {
+  id_favorite  String    @id @default(uuid())
+  User         User      @relation(fields: [id_user], references: [id_user])
+  Challenge    Challenge @relation(fields: [id_challenge], references: [id_challenge])
+  id_challenge String
+  id_user      String
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+
+  @@map("favorites")
+}
+
+model Like {
+  id_like      String    @id @default(uuid())
+  User         User      @relation(fields: [id_user], references: [id_user])
+  Challenge    Challenge @relation(fields: [id_challenge], references: [id_challenge])
+  id_challenge String
+  id_user      String
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+
+  @@map("likes")
+}
+
+//ending tables that have with relashionship with users table and others
+
+//fake_users Table and tables with relashionship with it
+model FakeUser {
+  id_fake_user         String         @id @default(uuid())
+  user                 User           @relation(fields: [id_user], references: [id_user])
+  id_user              String         @unique
+  fake_name            String
+  have_fake_children   Boolean?       @default(false)
+  number_fake_children Int?
+  have_fake_marriage   Boolean        @default(false)
+  fake_partner_name    String?
+  have_fake_friends    Boolean        @default(false)
+  number_fake_friends  Int?
+  created_at           DateTime       @default(now())
+  updated_at           DateTime       @updatedAt
+  fakechildren         FakeChildren[] // 1xn with fake_childrens
+  fakefriends          FakeFriend[] // 1xn with fake_friends
+
+  @@map("fake_users")
+}
+
+//starting tables with relashionship exclusively with fake_users table
+
+model FakeChildren {
+  id_fake_chil_names String   @id @default(uuid())
+  fake_user          FakeUser @relation(fields: [id_fake_user], references: [id_fake_user])
+  id_fake_user       String
+  fake_chil_gender   String
+  fake_chil_name     String
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  @@map("fake_childrens")
+}
+
+model FakeFriend {
+  id_fake_friends    String   @id @default(uuid())
+  fake_user          FakeUser @relation(fields: [id_fake_user], references: [id_fake_user])
+  id_fake_user       String
+  fake_friend_gender String
+  fake_friend_name   String
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  @@map("fake_friends")
+}
+
+//ending tables with relashionship exclusively with fake_users table
+
+////challenges Table and tables with relashionship with it
+
+model Challenge {
+  id_challenge      String             @id @default(uuid())
+  image_cover       String
+  language          String?
+  level             String
+  premium           Boolean            @default(true)
+  min_users         Int
+  max_users         Int?
+  expected_duration String
+  created_at        DateTime           @default(now())
+  updated_at        DateTime           @updatedAt
+  TySugestion       TySugestion[]
+  Subject           Subject[]
+  Task              Task[]
+  UserOnChallenge   UserOnChallenge[]
+  Classe            Class[]
+  Favorite          Favorite[]
+  Like              Like[]
+  Challenge_Locale  Challenge_Locale[]
+
+  @@map("challenges")
+}
+
+model Challenge_Locale {
+  id_challenge_locales String   @id @default(uuid())
+  locale               String
+  tittle               String
+  sub_tittle           String?
+  description          String
+  created_at           DateTime @default(now())
+  updated_at           DateTime @updatedAt
+
+  Challenge    Challenge @relation(fields: [id_challenge], references: [id_challenge])
+  id_challenge String
+
+  @@map("challenge_locales")
+}
+
+model TySugestion {
+  id_ty_sugestion String    @id @default(uuid())
+  sugestion       String
+  Challenge       Challenge @relation(fields: [id_challenge], references: [id_challenge])
+  id_challenge    String
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  @@map("ty_sugestions")
+}
+
+model Subject {
+  id_subject   String    @id @default(uuid())
+  subject      String
+  Challenge    Challenge @relation(fields: [id_challenge], references: [id_challenge])
+  id_challenge String
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+
+  @@map("subjects")
+}
+
+model Task {
+  id_task          String    @id @default(uuid())
+  Challenge        Challenge @relation(fields: [id_challenge], references: [id_challenge])
+  id_challenge     String
+  skill            String
+  task_title       String
+  task_description String
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+
+  @@map("tasks")
+}
