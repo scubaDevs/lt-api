@@ -1,5 +1,10 @@
 import { prisma } from "../../instance/db"
 import { Request, Response } from "express";
+import * as s3 from "../../instance/s3";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { v4 as uuidv4 } from 'uuid';
+
+
 
 
 
@@ -59,7 +64,7 @@ export const userController = {
             res.status(500).json({ message: 'Não deu certo!', error: Error })
         }
     },
-
+    //Getting all users on database
     getAllUsers: async (req: Request, res: Response) => {
         const allUsers = await prisma.user.findMany()
         if (allUsers) {
@@ -68,7 +73,7 @@ export const userController = {
         }
         res.status(500).json({ status: false })
     },
-
+    //Getting one user on database
     getUser: async (req: Request, res: Response) => {
         const { id } = req.query
 
@@ -85,7 +90,7 @@ export const userController = {
         res.status(500).json({ Message: 'Usuário não encontrado!', error: Error })
 
     },
-
+    //Updating one user on database
     updateUser: async (req: Request, res: Response) => {
         const { email } = req.body
         const { id } = req.query
@@ -114,6 +119,7 @@ export const userController = {
 
 
     },
+    //Deleting one user from database
     delUser: async (req: Request, res: Response) => {
         const { id } = req.query
         try {
@@ -129,5 +135,37 @@ export const userController = {
         } catch (Error) {
             res.status(500).json({ msg: 'User was note deleted', error: Error })
         }
+    },
+    //Uploading for the first time an image
+    uploadImage: async (req: Request, res: Response) => {
+
+        if (req.file) {
+            console.log('req.body', req.body)
+            console.log('req.file', req.file)
+
+            console.log('req.file.buffer', req.file.buffer)
+            const randomImageName = uuidv4()
+            const params = {
+                Bucket: s3.s3BucketName as string,
+                Key: randomImageName as string,
+                Body: req.file.buffer,
+                ContentType: req.file.mimetype as string,
+            }
+            const command = new PutObjectCommand(params)
+            try {
+                await s3.s3Instance.send(command)
+
+            } catch (Error) {
+                console.log("O erro é este: ", Error)
+            }
+
+
+
+            res.send({})
+        } else {
+            res.status(500).json({ message: 'req.file is undifined.', Error: Error })
+        }
+
+
     }
 }

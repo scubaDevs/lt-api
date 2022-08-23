@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import { userController } from "../controllers/usercontroller/usercontroller";
+import { upload } from '../middlewares/multer/multer';
 
 
 const route = Router();
@@ -17,6 +18,8 @@ route.put('/user', userController.updateUser)
 route.post('/', userController.newUser)
 //endpoint to delete a user on databe
 route.delete('/user', userController.delUser)
+//endpoint to upload an unique image
+route.post('/upload', upload.single('image'), userController.uploadImage)
 
 
 
