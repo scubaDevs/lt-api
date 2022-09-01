@@ -3,7 +3,11 @@ import { Request, Response } from "express";
 import * as s3 from "../../instance/s3";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { v4 as uuidv4 } from 'uuid';
-import { SchadualeType } from "../../types/usercontrollerTypes";
+import JWT from 'jsonwebtoken';
+import dotenv from "dotenv";
+
+
+dotenv.config();
 
 
 
@@ -18,6 +22,37 @@ export const userController = {
     newUser: async (req: Request, res: Response) => {
 
         console.log(req.body)
+
+        if (req.body.email && req.body.password) {
+            let { email, password } = req.body;
+
+            let hasUser = await prisma.user.findUnique({ where: { email } })
+
+            if (!hasUser) {
+                //descomentar quando for mexer
+                /*       let newUser = await prisma.user.create({
+                           data: {
+                              email,
+                              password
+                          }
+                      }) */
+                //descomentar quando for mexer
+                /*              const token = JWT.sign(
+                                 {
+             
+                                     email: newUser.email,
+                                     password: newUser.password
+                                 },
+                                 process.env.JWT_SECRET_KEY as string,
+                                 { expiresIn: '24h' }
+                             ); */
+
+                res.status(201).json({ status: true, newUser, token })
+
+            } else {
+                res.json({ error: "email já existe!" })
+            }
+        }
 
         /*      const {
                  name,
@@ -93,6 +128,33 @@ export const userController = {
 
         res.status(500).json({ Message: 'Usuário não encontrado!', error: Error })
 
+    },
+    //User login
+    login: async (req: Request, res: Response) => {
+        if (req.body.email && req.body.password) {
+            let email: string = req.body.email;
+            let password: string = req.body.password;
+
+            let user = await prisma.user.findUnique({ where: { email } })
+
+            if (user && user.password == password) {
+
+                const token = JWT.sign(
+                    {
+                        id: user.id_user,
+                        email: user.email,
+                        password: user.password
+                    },
+                    process.env.JWT_SECRET_KEY as string,
+                    { expiresIn: '24h' }
+                );
+
+                res.json({ status: true, token: token });
+                return
+            }
+        }
+        res.json({ status: false });
+        return
     },
     //Updating one user on database
     updateUser: async (req: Request, res: Response) => {

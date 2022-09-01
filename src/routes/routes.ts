@@ -12,6 +12,8 @@ const route = Router();
 route.get('/all', userController.getAllUsers)
 //endpoint that gets a user on database
 route.get('/', userController.getUser)
+//endpoint de Login do usuário
+route.get('/login', userController.login)
 //endpoint that updates a user on database
 route.put('/user', userController.updateUser)
 //endpoint that creates a new user on database
