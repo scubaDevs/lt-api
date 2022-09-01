@@ -14,15 +14,16 @@ model User {
   surname             String
   email               String               @unique
   password            String
-  age                 String
+  age                 String?
   avatar              String?
   whatsapp            String
   eng_level           String
   customer            Boolean?             @default(false)
-  native_lang         String
+  native_lang         String?
   country             String
-  city                String
+  city                String?
   role                Role?                @default(USER)
+  fake_name           String
   created_at          DateTime             @default(now())
   updated_at          DateTime             @updatedAt
   Feedbacks_Receiver  Feedback[]           @relation("receiver")
@@ -30,7 +31,6 @@ model User {
   MeetingAppointments MeetingAppointment[]
   UserThathaveAFriend Connection[]         @relation("UserThatHaveAFriend")
   FriendsUser         Connection[]         @relation("UserFriend")
-  FakeUser            FakeUser? // 1x1 com fake_users
   Payment             Payment[]
   UserOnChallenge     UserOnChallenge[]
   AbandonedClass      AbandonedClass[]
@@ -73,14 +73,14 @@ model Feedback {
 }
 
 model MeetingAppointment {
-  id_meeting    String   @id @default(uuid())
-  UserMeeting   User     @relation(fields: [id_user], references: [id_user])
-  id_user       String
-  start_meeting DateTime @db.Timetz()
-  end_meeting   DateTime @db.Timetz()
-  week_day      String
-  created_at    DateTime @default(now())
-  updated_at    DateTime @updatedAt
+  id_meeting  String   @id @default(uuid())
+  UserMeeting User     @relation(fields: [id_user], references: [id_user])
+  id_user     String
+  value       String
+  name        String
+  id          Int
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
 
   @@map("meeting_appointments")
 }
@@ -186,54 +186,6 @@ model Like {
 }
 
 //ending tables that have with relashionship with users table and others
-
-//fake_users Table and tables with relashionship with it
-model FakeUser {
-  id_fake_user         String         @id @default(uuid())
-  user                 User           @relation(fields: [id_user], references: [id_user])
-  id_user              String         @unique
-  fake_name            String
-  have_fake_children   Boolean?       @default(false)
-  number_fake_children Int?
-  have_fake_marriage   Boolean        @default(false)
-  fake_partner_name    String?
-  have_fake_friends    Boolean        @default(false)
-  number_fake_friends  Int?
-  created_at           DateTime       @default(now())
-  updated_at           DateTime       @updatedAt
-  fakechildren         FakeChildren[] // 1xn with fake_childrens
-  fakefriends          FakeFriend[] // 1xn with fake_friends
-
-  @@map("fake_users")
-}
-
-//starting tables with relashionship exclusively with fake_users table
-
-model FakeChildren {
-  id_fake_chil_names String   @id @default(uuid())
-  fake_user          FakeUser @relation(fields: [id_fake_user], references: [id_fake_user])
-  id_fake_user       String
-  fake_chil_gender   String
-  fake_chil_name     String
-  created_at         DateTime @default(now())
-  updated_at         DateTime @updatedAt
-
-  @@map("fake_childrens")
-}
-
-model FakeFriend {
-  id_fake_friends    String   @id @default(uuid())
-  fake_user          FakeUser @relation(fields: [id_fake_user], references: [id_fake_user])
-  id_fake_user       String
-  fake_friend_gender String
-  fake_friend_name   String
-  created_at         DateTime @default(now())
-  updated_at         DateTime @updatedAt
-
-  @@map("fake_friends")
-}
-
-//ending tables with relashionship exclusively with fake_users table
 
 ////challenges Table and tables with relashionship with it
 

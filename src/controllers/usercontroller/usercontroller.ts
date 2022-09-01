@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import * as s3 from "../../instance/s3";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { v4 as uuidv4 } from 'uuid';
+import { SchadualeType } from "../../types/usercontrollerTypes";
 
 
 
@@ -15,55 +16,58 @@ import { v4 as uuidv4 } from 'uuid';
 export const userController = {
     //create new user on database
     newUser: async (req: Request, res: Response) => {
-        const {
-            name,
-            surname,
-            email,
-            password,
-            age,
-            avatar,
-            whatsapp,
-            eng_level,
-            customer,
-            native_lang,
-            country,
-            city,
-            role
-        } = req.body
 
-        //Fixing prisma bug.There is a bug on prisma that dosen´t parse body string values to boolean values before save on database.
-        let nCustomer = false
-        if (customer === 'true') {
-            nCustomer = true;
-        } else {
-            nCustomer = false;
-        }
+        console.log(req.body)
 
-        try {
-            const newUser = await prisma.user.create({
-                data: {
-                    name: name,
-                    surname: surname,
-                    email: email,
-                    password: password,
-                    age: age,
-                    avatar: avatar,
-                    whatsapp: whatsapp,
-                    eng_level: eng_level,
-                    customer: nCustomer,
-                    native_lang: native_lang,
-                    country: country,
-                    city: city,
-                    role: role
-                }
-            })
+        /*      const {
+                 name,
+                 surname,
+                 email,
+                 password,
+                 fakeName,
+                 level,
+                 allData,
+                 selectedCountry,
+                 phone
+     
+             } = req.body
+     
+     
+     
+     
+             //Fixing prisma bug.There is a bug on prisma that dosen´t parse body string values to boolean values before save on database.
+             /*        let nCustomer = false
+                    if (customer === 'true') {
+                        nCustomer = true;
+                    } else {
+                        nCustomer = false;
+                    } */
+        /* 
+                try {
+                    const newUser = await prisma.user.create({
+                        data: {
+                            name: name,
+                            surname: surname,
+                            email: email,
+                            password: password,
+                            whatsapp: phone,
+                            eng_level: level,
+                            country: selectedCountry,
+                            fake_name: fakeName,
+                            MeetingAppointments: {
+                                createMany: {
+                                    data: allData,
+                                }
+                            }
+                        }
+                    }) 
 
-            res.status(200).json({ message: `Usuário criado com sucesso: ${newUser}` })
-        } catch (Error) {
-            console.log(Error);
-            res.status(500).json({ message: 'Não deu certo!', error: Error })
-        }
-    },
+        res.status(200).json({ message: `Usuário criado com sucesso: ${JSON.stringify(newUser)}` })
+    } catch(Error) {
+        console.log(Error);
+        res.status(500).json({ message: 'Não deu certo!', error: Error })
+    }
+    */ },
     //Getting all users on database
     getAllUsers: async (req: Request, res: Response) => {
         const allUsers = await prisma.user.findMany()

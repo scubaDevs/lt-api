@@ -3,7 +3,6 @@ import mainRoutes from "./routes/routes";
 import dotenv from "dotenv";
 import cors from "cors";
 import path from "path";
-import { S3Client } from "@aws-sdk/client-s3";
 
 
 dotenv.config();
@@ -11,8 +10,9 @@ dotenv.config();
 const server = express();
 
 server.use(cors());
-server.use(express.static(path.join(__dirname, "../public")))
-server.use(express.urlencoded({ extended: true }))
+server.use(express.static(path.join(__dirname, "../public")));
+server.use(express.json());
+server.use(express.urlencoded({ extended: false }));
 server.use('/api', mainRoutes);
 server.use((req: Request, res: Response) => {
     res.status(404).json({ message: "Página não encontrada!" })
