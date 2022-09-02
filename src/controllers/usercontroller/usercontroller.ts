@@ -7,6 +7,7 @@ import JWT from 'jsonwebtoken';
 import dotenv from "dotenv";
 
 
+
 dotenv.config();
 
 
@@ -21,88 +22,85 @@ export const userController = {
     //create new user on database
     newUser: async (req: Request, res: Response) => {
 
-        console.log(req.body)
 
         if (req.body.email && req.body.password) {
-            let { email, password } = req.body;
-
+            let { name, surname, email, password, fakeName, level, selectedCountry, phone, allData } = req.body;
             let hasUser = await prisma.user.findUnique({ where: { email } })
 
             if (!hasUser) {
-                //descomentar quando for mexer
-                /*       let newUser = await prisma.user.create({
-                           data: {
-                              email,
-                              password
-                          }
-                      }) */
-                //descomentar quando for mexer
-                /*              const token = JWT.sign(
-                                 {
-             
-                                     email: newUser.email,
-                                     password: newUser.password
-                                 },
-                                 process.env.JWT_SECRET_KEY as string,
-                                 { expiresIn: '24h' }
-                             ); */
+
+                let newUser = await prisma.user.create({
+                    data: {
+                        name: name,
+                        surname: surname,
+                        email: email,
+                        password: password,
+                        whatsapp: phone,
+                        eng_level: level,
+                        country: selectedCountry,
+                        fake_name: fakeName,
+                        MeetingAppointments: {
+                            createMany: {
+                                data: allData,
+                            }
+                        }
+                    }
+                })
+
+                const token = JWT.sign(
+                    {
+
+                        email: newUser.email,
+                        password: newUser.password
+                    },
+                    process.env.JWT_SECRET_KEY as string,
+                    { expiresIn: '20s' }
+                );
 
                 res.status(201).json({ status: true, newUser, token })
 
             } else {
-                res.json({ error: "email já existe!" })
+                res.status(409).json({ error: "Usuário já cadastrado!" })
             }
         }
 
-        /*      const {
-                 name,
-                 surname,
-                 email,
-                 password,
-                 fakeName,
-                 level,
-                 allData,
-                 selectedCountry,
-                 phone
-     
-             } = req.body
-     
-     
-     
-     
-             //Fixing prisma bug.There is a bug on prisma that dosen´t parse body string values to boolean values before save on database.
-             /*        let nCustomer = false
-                    if (customer === 'true') {
-                        nCustomer = true;
-                    } else {
-                        nCustomer = false;
-                    } */
-        /* 
-                try {
-                    const newUser = await prisma.user.create({
-                        data: {
-                            name: name,
-                            surname: surname,
-                            email: email,
-                            password: password,
-                            whatsapp: phone,
-                            eng_level: level,
-                            country: selectedCountry,
-                            fake_name: fakeName,
-                            MeetingAppointments: {
-                                createMany: {
-                                    data: allData,
-                                }
-                            }
-                        }
-                    }) 
 
-        res.status(200).json({ message: `Usuário criado com sucesso: ${JSON.stringify(newUser)}` })
-    } catch(Error) {
-        console.log(Error);
-        res.status(500).json({ message: 'Não deu certo!', error: Error })
-    }
-    */ },
+
+
+
+        /*  //Fixing prisma bug.There is a bug on prisma that dosen´t parse body string values to boolean values before save on database.
+              let nCustomer = false
+                if (customer === 'true') {
+                    nCustomer = true;
+                } else {
+                    nCustomer = false;
+                } 
+   */
+        /* try {
+            const newUser = await prisma.user.create({
+                data: {
+                    name: name,
+                    surname: surname,
+                    email: email,
+                    password: password,
+                    whatsapp: phone,
+                    eng_level: level,
+                    country: selectedCountry,
+                    fake_name: fakeName,
+                    MeetingAppointments: {
+                        createMany: {
+                            data: allData,
+                        }
+                    }
+                }
+            }) 
+
+res.status(200).json({ message: `Usuário criado com sucesso: ${JSON.stringify(newUser)}` })
+} catch(Error) {
+console.log(Error);
+res.status(500).json({ message: 'Não deu certo!', error: Error })
+} */
+    },
     //Getting all users on database
     getAllUsers: async (req: Request, res: Response) => {
         const allUsers = await prisma.user.findMany()
@@ -146,7 +144,7 @@ export const userController = {
                         password: user.password
                     },
                     process.env.JWT_SECRET_KEY as string,
-                    { expiresIn: '24h' }
+                    { expiresIn: '20s' }
                 );
 
                 res.json({ status: true, token: token });

@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { userController } from "../controllers/usercontroller/usercontroller";
 import { upload } from '../middlewares/multer/multer';
+import { Auth } from "../middlewares/auth/auth";
 
 
 const route = Router();
@@ -13,7 +14,7 @@ route.get('/all', userController.getAllUsers)
 //endpoint that gets a user on database
 route.get('/', userController.getUser)
 //endpoint de Login do usuário
-route.get('/login', userController.login)
+route.post('/login', Auth.private, userController.login)
 //endpoint that updates a user on database
 route.put('/user', userController.updateUser)
 //endpoint that creates a new user on database
