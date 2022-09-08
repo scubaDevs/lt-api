@@ -37,6 +37,7 @@ model User {
   ConcludedClass      ConcludedClass[]
   Favorite            Favorite[]
   Like                Like[]
+  RefreshToken        RefreshToken?
 
   @@map("users")
 }
@@ -48,9 +49,20 @@ enum Role {
 
 //starting tables with relashionship with users table and others
 
+model RefreshToken {
+  id_refreshToken String   @id @default(uuid())
+  expiresIn       Int
+  User            User     @relation(fields: [id_user], references: [id_user], onDelete: Cascade)
+  id_user         String   @unique
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  @@map("refresh_token")
+}
+
 model Payment {
   id_payments String   @id @default(uuid())
-  User        User     @relation(fields: [id_user], references: [id_user])
+  User        User     @relation(fields: [id_user], references: [id_user], onDelete: Cascade)
   id_user     String
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
@@ -60,9 +72,9 @@ model Payment {
 
 model Feedback {
   id_feedback  String   @id @default(uuid())
-  User_creator User     @relation("receiver", fields: [id_receiver], references: [id_user])
+  User_creator User     @relation("receiver", fields: [id_receiver], references: [id_user], onDelete: Cascade)
   id_receiver  String
-  User_Author  User     @relation("author", fields: [id_author], references: [id_user])
+  User_Author  User     @relation("author", fields: [id_author], references: [id_user], onDelete: Cascade)
   id_author    String
   feedback     String
   reply        String?
@@ -74,7 +86,7 @@ model Feedback {
 
 model MeetingAppointment {
   id_meeting  String   @id @default(uuid())
-  UserMeeting User     @relation(fields: [id_user], references: [id_user])
+  UserMeeting User     @relation(fields: [id_user], references: [id_user], onDelete: Cascade)
   id_user     String
   value       String
   name        String
@@ -87,9 +99,9 @@ model MeetingAppointment {
 
 model Connection {
   id_connections String   @id @default(uuid())
-  ReferencedUser User     @relation("UserThatHaveAFriend", fields: [id_user], references: [id_user])
+  ReferencedUser User     @relation("UserThatHaveAFriend", fields: [id_user], references: [id_user], onDelete: Cascade)
   id_user        String
-  User           User     @relation("UserFriend", fields: [Id_friend], references: [id_user])
+  User           User     @relation("UserFriend", fields: [Id_friend], references: [id_user], onDelete: Cascade)
   Id_friend      String
   created_at     DateTime @default(now())
   updated_at     DateTime @updatedAt
@@ -99,7 +111,7 @@ model Connection {
 
 model UserOnChallenge {
   id_user_challenge String    @id @default(uuid())
-  User              User      @relation(fields: [id_user], references: [id_user])
+  User              User      @relation(fields: [id_user], references: [id_user], onDelete: Cascade)
   Challenge         Challenge @relation(fields: [id_challenge], references: [id_challenge])
   id_challenge      String
   id_user           String
@@ -139,7 +151,7 @@ model ClassesOnUsersOnChallenge {
 
 model AbandonedClass {
   id_abandoned String   @id @default(uuid())
-  User         User     @relation(fields: [id_user], references: [id_user])
+  User         User     @relation(fields: [id_user], references: [id_user], onDelete: Cascade)
   id_user      String
   Classes      Class    @relation(fields: [id_class], references: [id_class])
   id_class     String
@@ -151,7 +163,7 @@ model AbandonedClass {
 
 model ConcludedClass {
   id_concluded_class String   @id @default(uuid())
-  User               User     @relation(fields: [id_user], references: [id_user])
+  User               User     @relation(fields: [id_user], references: [id_user], onDelete: Cascade)
   id_user            String
   Classes            Class    @relation(fields: [id_class], references: [id_class])
   id_class           String
@@ -163,7 +175,7 @@ model ConcludedClass {
 
 model Favorite {
   id_favorite  String    @id @default(uuid())
-  User         User      @relation(fields: [id_user], references: [id_user])
+  User         User      @relation(fields: [id_user], references: [id_user], onDelete: Cascade)
   Challenge    Challenge @relation(fields: [id_challenge], references: [id_challenge])
   id_challenge String
   id_user      String
@@ -175,7 +187,7 @@ model Favorite {
 
 model Like {
   id_like      String    @id @default(uuid())
-  User         User      @relation(fields: [id_user], references: [id_user])
+  User         User      @relation(fields: [id_user], references: [id_user], onDelete: Cascade)
   Challenge    Challenge @relation(fields: [id_challenge], references: [id_challenge])
   id_challenge String
   id_user      String

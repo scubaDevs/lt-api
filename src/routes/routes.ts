@@ -13,8 +13,17 @@ const route = Router();
 route.get('/all', userController.getAllUsers)
 //endpoint that gets a user on database
 route.get('/', userController.getUser)
-//endpoint de Login do usuário
-route.post('/login', Auth.private, userController.login)
+
+//Rotas de Login ***********************************************************************************************************************
+//Depois envia o token  para o endpoint de Login do usuário, ou então envia as informações a serem validadas para criação de um novo RefreshToken.
+route.post('/login', userController.login)
+
+// Solicitar novo RefreshToken
+
+route.post('/rt', userController.newRefreshToken);
+
+//*****************************************************************************************************************************
+
 //endpoint that updates a user on database
 route.put('/user', userController.updateUser)
 //endpoint that creates a new user on database

@@ -3,8 +3,16 @@ import { Request, Response } from "express";
 import * as s3 from "../../instance/s3";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { v4 as uuidv4 } from 'uuid';
-import JWT from 'jsonwebtoken';
 import dotenv from "dotenv";
+import { GenerateRefreshToken } from '../../provider/GenerateRefreshToken';
+import { GenerateToken } from "../../provider/GenerateToken";
+import { VerifyRefreshToken } from "../../provider/VerifyRefreshToken";
+import JWT, { JwtPayload } from "jsonwebtoken";
+import { VerifyToken } from "../../provider/VerifyToken";
+import { TokenType } from "../../types/usercontrollerTypes";
+
+
+
 
 
 
@@ -46,60 +54,17 @@ export const userController = {
                         }
                     }
                 })
+                // create a newToken for the newUser
+                const token: string = await GenerateToken.execute(newUser.id_user, newUser.email, newUser.password)
+                // create a newRefreshToken for the newUser
+                const refreshToken: string = await GenerateRefreshToken.execute(newUser.id_user)
 
-                const token = JWT.sign(
-                    {
-
-                        email: newUser.email,
-                        password: newUser.password
-                    },
-                    process.env.JWT_SECRET_KEY as string,
-                    { expiresIn: '20s' }
-                );
-
-                res.status(201).json({ status: true, newUser, token })
+                return res.status(201).json({ status: true, newUser, token, refreshToken })
 
             } else {
-                res.status(409).json({ error: "Usuário já cadastrado!" })
+                return res.status(409).json({ status: false, error: "Usuário já cadastrado!" })
             }
         }
-
-
-
-
-
-        /*  //Fixing prisma bug.There is a bug on prisma that dosen´t parse body string values to boolean values before save on database.
-              let nCustomer = false
-                if (customer === 'true') {
-                    nCustomer = true;
-                } else {
-                    nCustomer = false;
-                } 
-   */
-        /* try {
-            const newUser = await prisma.user.create({
-                data: {
-                    name: name,
-                    surname: surname,
-                    email: email,
-                    password: password,
-                    whatsapp: phone,
-                    eng_level: level,
-                    country: selectedCountry,
-                    fake_name: fakeName,
-                    MeetingAppointments: {
-                        createMany: {
-                            data: allData,
-                        }
-                    }
-                }
-            }) 
-
-res.status(200).json({ message: `Usuário criado com sucesso: ${JSON.stringify(newUser)}` })
-} catch(Error) {
-console.log(Error);
-res.status(500).json({ message: 'Não deu certo!', error: Error })
-} */
     },
     //Getting all users on database
     getAllUsers: async (req: Request, res: Response) => {
@@ -127,32 +92,93 @@ res.status(500).json({ message: 'Não deu certo!', error: Error })
         res.status(500).json({ Message: 'Usuário não encontrado!', error: Error })
 
     },
-    //User login
     login: async (req: Request, res: Response) => {
-        if (req.body.email && req.body.password) {
-            let email: string = req.body.email;
-            let password: string = req.body.password;
 
-            let user = await prisma.user.findUnique({ where: { email } })
+        const tokenVerification = await VerifyToken.execute(req);
 
-            if (user && user.password == password) {
+        if (tokenVerification && tokenVerification.tokenData) {
+            const token = req.headers.authorization;
+            const tokenData: TokenType = JWT.verify(
+                token,
+                process.env.JWT_SECRET_KEY as string
+            );
 
-                const token = JWT.sign(
-                    {
-                        id: user.id_user,
-                        email: user.email,
-                        password: user.password
-                    },
-                    process.env.JWT_SECRET_KEY as string,
-                    { expiresIn: '20s' }
-                );
+            console.log(token)
+            const user = await prisma.user.findUnique({ where: { id_user: tokenData.id } })
+            res.status(200).json({ status: true, expired: false, })
+        }
 
-                res.json({ status: true, token: token });
-                return
+    },/*  else if() {
+
+
+    } else {
+
+
+    } */
+
+    /*       console.log(token)
+          if(token) {
+          let tokenData
+          try {
+              tokenData = JWT.verify(token, process.env.JWT_SECRET_KEY as string);
+  
+          } catch (err) {
+              if (err) {
+                  tokenData = false
+              } else {
+                  tokenData = true
+              }
+          }
+  
+          console.log(tokenData)
+          if (tokenData) {
+              if (req.body.email && req.body.password) {
+                  const email: string = req.body.email;
+                  const password: string = req.body.password;
+  
+                  const user = await prisma.user.findUnique({ where: { email } })
+  
+                  if (user && user.password === password) {
+                      return res.status(200).json({ status: true, Message: "Usuário foi logado com sucesso bl bla ba!" })
+                  }
+              }
+          }
+          return res.status(403).json({ status: false, expired: true, message: "Token expirou." })
+      }
+  
+          return res.status(403).json({ status: false, expired: false, message: "Informações de auth inválidas." }); 
+
+},*/
+    //Renovação do RefreshToken
+    newRefreshToken: async (req: Request, res: Response) => {
+        const refreshToken: string = req.body.refreshToken;
+
+        if (refreshToken) {
+            console.log(refreshToken)
+            const verification = await VerifyRefreshToken.execute(refreshToken);
+            if (verification && verification.value) {
+                if (verification.value === true) {
+                    if (verification.dataToken !== null) {
+                        const newRefreshToken: string = await GenerateRefreshToken.execute(verification.dataToken.id_user)
+                        const newToken: string = await GenerateToken.execute(verification.dataToken.id_user)
+                        return res.status(200).json({ wasValid: true, newRefreshToken, newToken })
+                    }
+                    return res.status(403).json({ wasValid: false, msg: "Invalid RefreshToken" })
+                } else {
+                    if (verification.value === null) {
+                        return res.status(403).json({ wasValid: false, msg: "Invalid RefreshToken" })
+                    }
+                    if (verification.dataToken !== null) {
+                        const newRefreshToken: string = await GenerateRefreshToken.execute(verification.dataToken.id_user)
+                        const newToken: string = await GenerateToken.execute(verification.dataToken.id_user)
+                        return res.status(200).json({ wasValid: true, newRefreshToken, newToken })
+                    }
+                }
+
+
             }
         }
-        res.json({ status: false });
-        return
+        return res.status(403).json({ wasValid: false, msg: "Invalid RefreshToken bla" })
     },
     //Updating one user on database
     updateUser: async (req: Request, res: Response) => {
