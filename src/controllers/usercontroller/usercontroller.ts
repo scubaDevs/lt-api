@@ -16,6 +16,7 @@ import { TokenType } from "../../types/usercontrollerTypes";
 
 
 
+
 dotenv.config();
 
 
@@ -93,62 +94,27 @@ export const userController = {
 
     },
     login: async (req: Request, res: Response) => {
-
-        const tokenVerification = await VerifyToken.execute(req);
-
-        if (tokenVerification && tokenVerification.tokenData) {
-            const token = req.headers.authorization;
-            const tokenData: TokenType = JWT.verify(
-                token,
-                process.env.JWT_SECRET_KEY as string
-            );
-
-            console.log(token)
-            const user = await prisma.user.findUnique({ where: { id_user: tokenData.id } })
-            res.status(200).json({ status: true, expired: false, })
+        const authData = await VerifyToken.execute(req);
+        console.log(6)
+        if (authData.hasToken === true) {
+            console.log(7)
+            if (authData.access === true && authData) {
+                console.log(8)
+                return res.status(200).json({ status: true, userId: authData.user.id_user })
+            }
+            if (authData.access === false && authData.expired) {
+                console.log(9)
+                return res.status(403).json({ status: false, tokenExpired: authData.expired })
+            } else {
+                console.log(10)
+                return res.status(403).json({ status: false, tokenExpired: authData.expired, invalidToken: true })
+            }
         }
+        if (authData.hasToken === false && req.body.email && req.body.password) {
+            const { email, password } = req.body;
 
-    },/*  else if() {
-
-
-    } else {
-
-
-    } */
-
-    /*       console.log(token)
-          if(token) {
-          let tokenData
-          try {
-              tokenData = JWT.verify(token, process.env.JWT_SECRET_KEY as string);
-  
-          } catch (err) {
-              if (err) {
-                  tokenData = false
-              } else {
-                  tokenData = true
-              }
-          }
-  
-          console.log(tokenData)
-          if (tokenData) {
-              if (req.body.email && req.body.password) {
-                  const email: string = req.body.email;
-                  const password: string = req.body.password;
-  
-                  const user = await prisma.user.findUnique({ where: { email } })
-  
-                  if (user && user.password === password) {
-                      return res.status(200).json({ status: true, Message: "Usuário foi logado com sucesso bl bla ba!" })
-                  }
-              }
-          }
-          return res.status(403).json({ status: false, expired: true, message: "Token expirou." })
-      }
-  
-          return res.status(403).json({ status: false, expired: false, message: "Informações de auth inválidas." }); 
-
-},*/
+        }
+    },
     //Renovação do RefreshToken
     newRefreshToken: async (req: Request, res: Response) => {
         const refreshToken: string = req.body.refreshToken;

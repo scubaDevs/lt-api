@@ -1,6 +1,7 @@
 import { Request } from "express";
 import JWT from 'jsonwebtoken';
 import dotenv from 'dotenv';
+import { prisma } from "../instance/db";
 
 dotenv.config();
 
@@ -9,8 +10,10 @@ export const VerifyToken = {
 
     execute: async (req: Request) => {
 
-        let sucess: boolean | undefined = false;
-        let tokenData;
+        let access: boolean = false;
+        let tokenData: any;
+        let expired: boolean;
+        let hasToken: boolean = false;
 
         //Fazer verificação do token
         if (req.headers.authorization) {
@@ -26,20 +29,29 @@ export const VerifyToken = {
                         token,
                         process.env.JWT_SECRET_KEY as string
                     );
-                    sucess = true;
-                } catch (err: any) {
-                    if (err.name === 'jwt expired') {
-                        sucess = false
-                    } else {
-                        sucess = undefined
+                    if (tokenData) {
+                        access = true;
+                        expired = false;
+                        hasToken = true;
                     }
+
+                } catch (err: any) {
+                    console.log(1)
+                    if (err.name === "TokenExpiredError") {
+                        console.log(2)
+                        expired = true
+                    }
+                    console.log(3)
                 }
             }
         }
-        if (sucess) {
-            return { sucess, tokenData };
+        if (access) {
+            console.log(4)
+            const user = await prisma.user.findUnique({ where: { email: tokenData.email } })
+            return { access, user, tokenData, expired, hasToken };
         } else {
-            return sucess
+            console.log(5)
+            return { access, expired, hasToken }
         }
     }
 

@@ -4,7 +4,7 @@ export type SchadualeType = {
     schaduale: { id: number, value: string, name: string }
 }
 
-export interface TokenType extends JwtPayload {
+export type TokenType = {
 
     id: string;
     email: string;
