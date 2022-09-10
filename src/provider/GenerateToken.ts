@@ -13,7 +13,7 @@ const GenerateToken = {
                     password: user.password
                 },
                 process.env.JWT_SECRET_KEY as string,
-                { expiresIn: '1h' }
+                { expiresIn: '2h' }
             );
             return newToken;
         } else {
@@ -25,7 +25,7 @@ const GenerateToken = {
                     password: pass
                 },
                 process.env.JWT_SECRET_KEY as string,
-                { expiresIn: '1h' }
+                { expiresIn: '2h' }
             );
             return newToken;
         }

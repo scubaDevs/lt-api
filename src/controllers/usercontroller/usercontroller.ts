@@ -10,6 +10,7 @@ import { VerifyRefreshToken } from "../../provider/VerifyRefreshToken";
 import JWT, { JwtPayload } from "jsonwebtoken";
 import { VerifyToken } from "../../provider/VerifyToken";
 import { TokenType } from "../../types/usercontrollerTypes";
+import { VerifyIfHasUser } from "../../provider/VerifyIfHas]user";
 
 
 
@@ -60,7 +61,7 @@ export const userController = {
                 // create a newRefreshToken for the newUser
                 const refreshToken: string = await GenerateRefreshToken.execute(newUser.id_user)
 
-                return res.status(201).json({ status: true, newUser, token, refreshToken })
+                return res.status(201).json({ status: true, userId: newUser.id_user, token, refreshToken })
 
             } else {
                 return res.status(409).json({ status: false, error: "Usuário já cadastrado!" })
@@ -95,25 +96,32 @@ export const userController = {
     },
     login: async (req: Request, res: Response) => {
         const authData = await VerifyToken.execute(req);
+        const email: string = req.body.email;
+        const password: string = req.body.password;
         console.log(6)
-        if (authData.hasToken === true) {
+        console.log(authData)
+        if (authData.hasToken === true && (!email || !password)) {
             console.log(7)
             if (authData.access === true && authData) {
                 console.log(8)
                 return res.status(200).json({ status: true, userId: authData.user.id_user })
             }
-            if (authData.access === false && authData.expired) {
+            if ((authData.access === false) && (authData.expired)) {
                 console.log(9)
-                return res.status(403).json({ status: false, tokenExpired: authData.expired })
+                return res.status(403).json({ status: false, tokenExpired: authData.expired, msg: "Token Expirado" })
             } else {
                 console.log(10)
-                return res.status(403).json({ status: false, tokenExpired: authData.expired, invalidToken: true })
+                return res.status(403).json({ status: false, tokenExpired: authData.expired, invalidToken: true, msg: "Token inválido" })
             }
         }
-        if (authData.hasToken === false && req.body.email && req.body.password) {
-            const { email, password } = req.body;
+        if (authData.hasToken && req.body.email && req.body.password) {
 
+            const hasUser = await VerifyIfHasUser.execute(email, password);
+            if (hasUser.status === true && hasUser.user) {
+                return res.status(200).json({ status: true, userId: hasUser.user.id_user, refreshToken: hasUser.refreshToken, token: hasUser.token });
+            }
         }
+        return res.status(403).json({ status: false, msg: "Informações de Auth inválidas." })
     },
     //Renovação do RefreshToken
     newRefreshToken: async (req: Request, res: Response) => {

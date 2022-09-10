@@ -1,4 +1,4 @@
-import { JwtPayload } from "jsonwebtoken"
+
 
 export type SchadualeType = {
     schaduale: { id: number, value: string, name: string }

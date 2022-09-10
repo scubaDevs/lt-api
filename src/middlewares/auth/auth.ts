@@ -25,9 +25,7 @@ export const Auth = {
                     );
                     sucess = true;
                 } catch (err) {
-                    if (err) {
-                        sucess = false
-                    }
+
                 }
             }
         }

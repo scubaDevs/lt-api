@@ -36,12 +36,16 @@ export const VerifyToken = {
                     }
 
                 } catch (err: any) {
-                    console.log(1)
+
                     if (err.name === "TokenExpiredError") {
                         console.log(2)
                         expired = true
+                        hasToken = true;
+                    } else {
+                        hasToken = true
+                        console.log(3)
                     }
-                    console.log(3)
+
                 }
             }
         }

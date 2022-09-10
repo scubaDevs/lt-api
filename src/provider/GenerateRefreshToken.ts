@@ -12,6 +12,7 @@ const GenerateRefreshToken = {
 
             await prisma.refreshToken.delete({ where: { id_refreshToken: currentRefreshToken.id_refreshToken } });
 
+
             const newRefreshToken = await prisma.refreshToken.create({
                 data: {
                     id_user,
@@ -21,6 +22,7 @@ const GenerateRefreshToken = {
             return newRefreshToken.id_refreshToken;
 
         } else {
+
 
             const newRefreshToken = await prisma.refreshToken.create({
                 data: {
